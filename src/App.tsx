@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useMemo, useState, useRef } from "react"
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react"
 import { InputSelect } from "./components/InputSelect"
 import { Instructions } from "./components/Instructions"
 import { Transactions } from "./components/Transactions"
@@ -6,7 +6,7 @@ import { useEmployees } from "./hooks/useEmployees"
 import { usePaginatedTransactions } from "./hooks/usePaginatedTransactions"
 import { useTransactionsByEmployee } from "./hooks/useTransactionsByEmployee"
 import { EMPTY_EMPLOYEE } from "./utils/constants"
-import { Employee, Transaction } from "./utils/types"
+import { Employee } from "./utils/types"
 
 export function App() {
   const { data: employees, ...employeeUtils } = useEmployees()
@@ -14,34 +14,11 @@ export function App() {
   const { data: transactionsByEmployee, ...transactionsByEmployeeUtils } = useTransactionsByEmployee()
   const [isLoading, setIsLoading] = useState(false)
   const [currentEmployee, setCurrentEmployee] = useState("")
-  const initialTransactions = paginatedTransactions?.data ?? transactionsByEmployee ?? null
-  const transactionsRef = useRef(initialTransactions)
 
-  const filterDuplicateTransactions = (transactions: Transaction[]) => {
-    const uniqueTransactionIds = new Set()
-    return transactions.reduce((acc: Transaction[], transaction: Transaction) => {
-      if (!uniqueTransactionIds.has(transaction.id)) {
-        acc.push(transaction)
-        uniqueTransactionIds.add(transaction.id)
-      }
-      return acc
-    }, [])
-  }
-
-  const transactions = useMemo(() => {
-    const updatedTransactions = paginatedTransactions?.data
-      ? (transactionsRef.current
-        ? filterDuplicateTransactions([...transactionsRef.current, ...paginatedTransactions?.data])
-        : paginatedTransactions?.data)
-      : transactionsByEmployee
-      ? (transactionsRef.current
-        ? filterDuplicateTransactions([...transactionsRef.current, ...transactionsByEmployee])
-        : transactionsByEmployee)
-      : null
-
-    transactionsRef.current = updatedTransactions
-    return updatedTransactions
-  }, [paginatedTransactions, transactionsByEmployee])
+  const transactions = useMemo(
+    () => paginatedTransactions?.data ?? transactionsByEmployee ?? null,
+    [paginatedTransactions, transactionsByEmployee]
+  )
 
   const loadAllTransactions = useCallback(async () => {
     setIsLoading(true)
@@ -103,16 +80,12 @@ export function App() {
         <div className="RampGrid">
           <Transactions transactions={transactions} />
 
-          {transactions !== null && (
+          {transactions !== null && currentEmployee === "" && (
             <button
               className="RampButton"
               disabled={paginatedTransactionsUtils.loading}
               onClick={async () => {
-                if (currentEmployee === "") {
-                  await loadAllTransactions()
-                } else {
-                  await loadTransactionsByEmployee(currentEmployee)
-                }
+                await loadAllTransactions()
               }}
             >
               View More
