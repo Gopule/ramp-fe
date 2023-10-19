@@ -13,6 +13,7 @@ export function App() {
   const { data: paginatedTransactions, ...paginatedTransactionsUtils } = usePaginatedTransactions()
   const { data: transactionsByEmployee, ...transactionsByEmployeeUtils } = useTransactionsByEmployee()
   const [currentEmployee, setCurrentEmployee] = useState("")
+  const nextPage = paginatedTransactions && paginatedTransactions.nextPage
 
   const transactions = useMemo(
     () => paginatedTransactions?.data ?? transactionsByEmployee ?? null,
@@ -76,7 +77,7 @@ export function App() {
         <div className="RampGrid">
           <Transactions transactions={transactions} />
 
-          {transactions !== null && currentEmployee === "" && (
+          {transactions !== null && currentEmployee === "" && nextPage && (
             <button
               className="RampButton"
               disabled={paginatedTransactionsUtils.loading}
